@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Diploma Project</string>
+    <string name="face_classificator_button">Face Classificator</string>
+</resources>
