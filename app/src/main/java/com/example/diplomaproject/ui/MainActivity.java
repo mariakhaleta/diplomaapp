@@ -1,16 +1,16 @@
 package com.example.diplomaproject.ui;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.diplomaproject.R;
+import com.example.diplomaproject.ui.edit.PhotoEditFragment;
 import com.example.diplomaproject.ui.main.MainFragment;
-import com.example.diplomaproject.ui.main.PhotoEditFragment;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -57,16 +57,26 @@ public class MainActivity extends AppCompatActivity {
         byte[] byteArray = stream.toByteArray();
 
         Bundle bundle = new Bundle();
-        bundle.putByteArray("facesBitmap",byteArray);
+        bundle.putByteArray("facesBitmap", byteArray);
 
         PhotoEditFragment photoEditFragment = PhotoEditFragment.newInstance();
         photoEditFragment.setArguments(bundle);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.content, photoEditFragment)
+                .addToBackStack(null)
                 .commit();
     }
 
+    @Override
+    public void onBackPressed() {
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        if (count < 1) {
+            super.onBackPressed();
+        } else {
+            getSupportFragmentManager().popBackStack();
+        }
+    }
 
     private static class OpenCVLoaderTask extends AsyncTask<Void, Void, Void> {
 

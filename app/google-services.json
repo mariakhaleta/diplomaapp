@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "434499721675",
+    "firebase_url": "https://dimplomamaria.firebaseio.com",
+    "project_id": "dimplomamaria",
+    "storage_bucket": "dimplomamaria.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434499721675:android:1c72f820a70e869d5bfe4e",
+        "android_client_info": {
+          "package_name": "com.example.diplomaproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "434499721675-nq4knm4qsjjba6d3er5bcc7bg44o5t99.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjq4s7A-JN3RzgvcMOgEZH2iAJVcAx30o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "434499721675-nq4knm4qsjjba6d3er5bcc7bg44o5t99.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,53 +4,57 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
-import com.example.diplomaproject.utils.Utils;
+import androidx.annotation.NonNull;
 
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfRect;
-import org.opencv.core.Rect;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.objdetect.CascadeClassifier;
-import org.opencv.objdetect.Objdetect;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
+import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions;
 
 public class FaceDetector {
 
-    private CascadeClassifier mCascadeClassifier;
+    private FirebaseVisionFaceDetector mFirebaseVisionFaceDetector;
 
     public FaceDetector() {
-        mCascadeClassifier = new CascadeClassifier();
-        mCascadeClassifier.load("sdcard/haarcascade_frontalface_default.xml");
+        FirebaseVisionFaceDetectorOptions faceDetectorOptions =
+                new FirebaseVisionFaceDetectorOptions.Builder()
+                        .setPerformanceMode(FirebaseVisionFaceDetectorOptions.FAST)
+                        .build();
+
+        mFirebaseVisionFaceDetector = FirebaseVision.getInstance()
+                .getVisionFaceDetector(faceDetectorOptions);
     }
 
-    public Bitmap detectFace(Bitmap imageBitmap) {
-        Mat imageMat = Utils.bitmapToMat(imageBitmap);
-        Mat grayImageMat = new Mat();
-        Imgproc.cvtColor(imageMat, grayImageMat, Imgproc.COLOR_BGR2GRAY);
-
-        int absoluteFaceSize = Math.round(grayImageMat.height() * 0.2f);
-
-        MatOfRect detectionResult = new MatOfRect();
-        mCascadeClassifier.detectMultiScale(grayImageMat, detectionResult, 1.1, 2);
-
-        Bitmap mutableBitmap = imageBitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Canvas canvas = new Canvas(mutableBitmap);
+    public void detectFace(Bitmap imageBitmap, FaceDetectorListener listener) {
+        final Bitmap scaledBitmap = getScaledBitmap(imageBitmap);
+        Canvas canvas = new Canvas(scaledBitmap);
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
         paint.setColor(Color.RED);
         paint.setStrokeWidth(10);
 
-        for (Rect detectedFace : detectionResult.toArray()) {
-            canvas.drawRect(
-                    new android.graphics.Rect(
-                            detectedFace.x,
-                            detectedFace.y,
-                            detectedFace.x + detectedFace.width,
-                            detectedFace.y + detectedFace.height),
-                    paint);
-        }
+        FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(scaledBitmap);
+        mFirebaseVisionFaceDetector.detectInImage(image).addOnSuccessListener(faces -> {
+            faces.forEach(face -> {
+                Rect faceRect = face.getBoundingBox();
+                canvas.drawRect(faceRect, paint);
+            });
+            listener.onFaceDetected(scaledBitmap);
+        }).addOnFailureListener(System.out::println);
+    }
 
-        return mutableBitmap;
+    public interface FaceDetectorListener {
+        void onFaceDetected(Bitmap bitmap);
+    }
+
+    private Bitmap getScaledBitmap(Bitmap bitmap) {
+        Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        float aspectRatio = mutableBitmap.getWidth() / (float) mutableBitmap.getHeight();
+        int width = 480;
+        int height = Math.round(width / aspectRatio);
+        return Bitmap.createScaledBitmap(mutableBitmap, width, height, false);
     }
 }
