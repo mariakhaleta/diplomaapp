@@ -9,10 +9,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/face_classificator_button"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/superResolutionButton"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/superResolutionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Super Resolution"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/faceClassificatorButton" />
 
     <ProgressBar
         android:id="@+id/progressBar"

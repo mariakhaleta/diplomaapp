@@ -6,13 +6,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
-import androidx.annotation.NonNull;
-
-import com.google.android.gms.tasks.OnFailureListener;
+import com.example.diplomaproject.ui.edit.FaceRect;
+import com.example.diplomaproject.utils.Utils;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions;
+
+import java.util.ArrayList;
 
 public class FaceDetector {
 
@@ -29,32 +30,29 @@ public class FaceDetector {
     }
 
     public void detectFace(Bitmap imageBitmap, FaceDetectorListener listener) {
-        final Bitmap scaledBitmap = getScaledBitmap(imageBitmap);
-        Canvas canvas = new Canvas(scaledBitmap);
-        Paint paint = new Paint();
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(10);
+        final Bitmap scaledBitmap = Utils.getScaledBitmap(imageBitmap);
 
         FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(scaledBitmap);
         mFirebaseVisionFaceDetector.detectInImage(image).addOnSuccessListener(faces -> {
+            ArrayList<FaceRect> facesBound = new ArrayList<>();
+            Canvas canvas = new Canvas(scaledBitmap);
+            Paint paint = new Paint();
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(Color.BLACK);
+            paint.setStrokeWidth(5);
+
             faces.forEach(face -> {
-                Rect faceRect = face.getBoundingBox();
-                canvas.drawRect(faceRect, paint);
+                Rect boundingBox = face.getBoundingBox();
+
+                facesBound.add(new FaceRect(boundingBox.left, boundingBox.top, boundingBox.height(), boundingBox.width()));
+                canvas.drawRect(boundingBox, paint);
             });
-            listener.onFaceDetected(scaledBitmap);
+
+            listener.onFaceDetected(scaledBitmap, facesBound);
         }).addOnFailureListener(System.out::println);
     }
 
     public interface FaceDetectorListener {
-        void onFaceDetected(Bitmap bitmap);
-    }
-
-    private Bitmap getScaledBitmap(Bitmap bitmap) {
-        Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-        float aspectRatio = mutableBitmap.getWidth() / (float) mutableBitmap.getHeight();
-        int width = 480;
-        int height = Math.round(width / aspectRatio);
-        return Bitmap.createScaledBitmap(mutableBitmap, width, height, false);
+        void onFaceDetected(Bitmap bitmap, ArrayList<FaceRect> facesBound);
     }
 }

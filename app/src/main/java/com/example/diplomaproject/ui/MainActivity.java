@@ -9,12 +9,17 @@ import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.diplomaproject.R;
+import com.example.diplomaproject.ui.edit.FaceRect;
 import com.example.diplomaproject.ui.edit.PhotoEditFragment;
 import com.example.diplomaproject.ui.main.MainFragment;
 
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Rect;
+import org.opencv.dnn.Dnn;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,13 +56,14 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    public void createPhotoEditFragment(Bitmap facesBitmap) {
+    public void createPhotoEditFragment(Bitmap facesBitmap, ArrayList<FaceRect> facesBound) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         facesBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] byteArray = stream.toByteArray();
 
         Bundle bundle = new Bundle();
-        bundle.putByteArray("facesBitmap", byteArray);
+        bundle.putByteArray(PhotoEditFragment.FACES_BITMAP, byteArray);
+        bundle.putParcelableArrayList(PhotoEditFragment.FACES_BOUND, facesBound);
 
         PhotoEditFragment photoEditFragment = PhotoEditFragment.newInstance();
         photoEditFragment.setArguments(bundle);

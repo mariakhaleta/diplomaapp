@@ -35,7 +35,8 @@ public class MainFragment extends Fragment {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    private static final int PICK_IMAGE_REQUEST_CODE = 1;
+    private static final int PICK_IMAGE_REQUEST_CODE_FACE = 1;
+    private static final int PICK_IMAGE_REQUEST_CODE_RESOLUTION = 2;
 
     private FaceDetector mFaceDetector = new FaceDetector();
 
@@ -47,6 +48,7 @@ public class MainFragment extends Fragment {
 
     private ProgressBar mProgressBar;
     private MaterialButton mFaceClassificatorButton;
+    private MaterialButton mSuperResolutionButton;
 
     @Nullable
     @Override
@@ -64,36 +66,35 @@ public class MainFragment extends Fragment {
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(WRITE_READ_PERMISSIONS, WRITE_READ_PERMISSIONS_REQUEST_CODE);
             } else {
-                pickImage();
+                pickImage(PICK_IMAGE_REQUEST_CODE_FACE);
+            }
+        });
+
+        mSuperResolutionButton = mainView.findViewById(R.id.superResolutionButton);
+        mSuperResolutionButton.setOnClickListener(view ->{
+            if (ContextCompat.checkSelfPermission(mMaiActivity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(WRITE_READ_PERMISSIONS, WRITE_READ_PERMISSIONS_REQUEST_CODE);
+            } else {
+                pickImage(PICK_IMAGE_REQUEST_CODE_RESOLUTION);
             }
         });
 
         return mainView;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == WRITE_READ_PERMISSIONS_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pickImage();
-            } else {
-                Toast.makeText(mMaiActivity, "Permissions was denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void pickImage() {
+    private void pickImage(int code) {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Please select picture"), PICK_IMAGE_REQUEST_CODE);
+        startActivityForResult(Intent.createChooser(intent, "Please select picture"), code);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PICK_IMAGE_REQUEST_CODE) {
+        if (requestCode == PICK_IMAGE_REQUEST_CODE_FACE) {
             if (data != null) {
                 Uri imageUri = data.getData();
                 Bitmap imageBitmap;
@@ -110,8 +111,40 @@ public class MainFragment extends Fragment {
 
                         mProgressBar.setVisibility(View.VISIBLE);
                         mFaceClassificatorButton.setVisibility(View.GONE);
-                        mFaceDetector.detectFace(imageBitmap, facesBitmap -> {
-                            mMaiActivity.createPhotoEditFragment(facesBitmap);
+                        mSuperResolutionButton.setVisibility(View.GONE);
+                        mFaceDetector.detectFace(imageBitmap, (facesBitmap, facesBound) -> {
+                            mMaiActivity.createPhotoEditFragment(facesBitmap, facesBound);
+                            mProgressBar.setVisibility(View.GONE);
+                            mFaceClassificatorButton.setVisibility(View.GONE);
+                            mSuperResolutionButton.setVisibility(View.GONE);
+                        });
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        if (requestCode == PICK_IMAGE_REQUEST_CODE_RESOLUTION) {
+            if (data != null) {
+                Uri imageUri = data.getData();
+                Bitmap imageBitmap;
+
+                if (imageUri != null) {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            imageBitmap =
+                                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(mMaiActivity.getContentResolver(), imageUri));
+                        } else {
+                            imageBitmap =
+                                    BitmapFactory.decodeStream(mMaiActivity.getContentResolver().openInputStream(imageUri));
+                        }
+
+                        mProgressBar.setVisibility(View.VISIBLE);
+                        mFaceClassificatorButton.setVisibility(View.GONE);
+                        mFaceDetector.detectFace(imageBitmap, (facesBitmap, facesBound) -> {
+                            mMaiActivity.createPhotoEditFragment(facesBitmap, facesBound);
                             mProgressBar.setVisibility(View.GONE);
                             mFaceClassificatorButton.setVisibility(View.GONE);
                         });
